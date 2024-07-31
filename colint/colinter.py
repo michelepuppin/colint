@@ -1,5 +1,10 @@
 import subprocess
 import sys
+import os
+
+import toml
+
+config = toml.load(os.path.dirname(__file__) + "/pyproject.toml")
 
 
 def run_command(command):
@@ -13,28 +18,42 @@ def run_command(command):
 
 def code_format(args="."):
     """Run black code formatter."""
-    run_command(f"python3 -m black {args}")
+    line_length = config["tool"]["black"].get("line-length", 80)
+    exclude = config["tool"]["black"].get("exclude", "")
+    run_command(f"python3 -m black --line-length {line_length} --exclude '{exclude}'  {args}")
     print(args)
 
 
 def flake_lint(args="."):
     """Run flake8 linter."""
-    run_command(f"python3 -m flake8 {args}")
+    exclude = ",".join(config["tool"]["flake8"].get("exclude", []))
+    extend_ignore = ",".join(config["tool"]["flake8"].get("extend-ignore", []))
+    per_file_ignores = config["tool"]["flake8"].get("per-file-ignores", "").replace("\n", "")
+    run_command(
+        f"python3 -m flake8 --exclude {exclude} --extend-ignore {extend_ignore} --per-file-ignores='{per_file_ignores}' {args} "
+    )
 
 
 def isort(args="."):
     """Run isort for import sorting."""
-    run_command(f"python3 -m isort {args}")
+    profile = config["tool"]["isort"].get("profile", "black")
+    skip_glob = ",".join(config["tool"]["isort"].get("skip_glob", []))
+    run_command(f"python3 -m isort {args} --profile {profile} --skip-glob '{skip_glob}'")
 
 
 def vulture(args="."):
-    """Run flake8 linter."""
-    run_command(f"python3 -m vulture {args}")
+    """Run vulture."""
+    exclude = ",".join(config["tool"]["vulture"].get("exclude", []))
+    run_command(f"python3 -m vulture {args} --exclude '{exclude}'")
 
 
 def type_check(args="."):
-    """Run isort for import sorting."""
-    run_command(f"python3 -m mypy {args}/*.py")
+    """Run mypy for type checking."""
+    python_version = config["tool"]["mypy"].get("python_version", "3.8")
+    overrides = " ".join(
+        [f"--exclude '{mod}'" for override in config["tool"]["mypy"].get("overrides", []) for mod in override["module"]]
+    )
+    run_command(f"python3 -m mypy {args}/*.py --python-version {python_version} {overrides}")
 
 
 def lint(args="."):
@@ -56,7 +75,7 @@ def main():
         "flake-lint": flake_lint,
         "isort": isort,
         "vulture": vulture,
-        "type_check": type_check,
+        "type-check": type_check,
         "lint": lint,
         "clean": clean,
     }
