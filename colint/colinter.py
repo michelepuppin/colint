@@ -27,6 +27,16 @@ def isort(args="."):
     run_command(f"python3 -m isort {args}")
 
 
+def vulture(args="."):
+    """Run flake8 linter."""
+    run_command(f"python3 -m vulture {args}")
+
+
+def type_check(args="."):
+    """Run isort for import sorting."""
+    run_command(f"python3 -m mypy {args}/*.py")
+
+
 def lint(args="."):
     """Run all linting tools: isort, black, flake8."""
     isort(args)
@@ -45,6 +55,8 @@ def main():
         "code-format": code_format,
         "flake-lint": flake_lint,
         "isort": isort,
+        "vulture": vulture,
+        "type_check": type_check,
         "lint": lint,
         "clean": clean,
     }
