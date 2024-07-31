@@ -2,10 +2,10 @@ import subprocess
 import sys
 
 
-def run_command(command, env=None):
+def run_command(command):
     """Run a shell command."""
     try:
-        subprocess.run(command, shell=True, check=True, env=env)
+        subprocess.run(command, shell=True, check=True)
     except subprocess.CalledProcessError as e:
         print(f"Command failed: {e}")
         sys.exit(1)
