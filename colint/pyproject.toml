@@ -9,8 +9,11 @@ exclude = [
     "docs",
     "notebooks",
     "poc_materials",
-    ".buildozer"
+    ".buildozer",
+    ".env",
+    ".venv"
 ]
+
 extend-ignore = [
     # Styling rules already handled by black
     "E1",
@@ -34,13 +37,13 @@ per-file-ignores = '''
 
 [tool.isort]
 profile = "black"
-skip_glob = ["*/venv/*", "*/env/*", "*/docs/*", "*/lint_env/*"]
+skip_glob = ["*/venv/*", "*/env/*", "*/docs/*", "*/lint_env/*", "*/.venv/*"]
 
 
 [tool.black]
 line-length = 120
 exclude = '''
-    lint_env\/|venv\/|env\/|docs\/|notebooks\/|poc\_materials\/|\.buildozer\/
+    lint_env\/|venv\/|env\/|docs\/|notebooks\/|poc\_materials\/|\.buildozer\/|.venv\/|.env\/
 '''
 preview = true
 
@@ -51,6 +54,7 @@ exclude = [
     "*/.venv/*",
     "*/lint_env/*",
     "*/env/*",
+    "*/.env/*",
     "*/docs/*",
 ]
 
