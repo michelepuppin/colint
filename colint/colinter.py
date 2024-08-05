@@ -1,6 +1,6 @@
+import os
 import subprocess
 import sys
-import os
 
 import toml
 
@@ -16,15 +16,16 @@ def run_command(command):
         sys.exit(1)
 
 
-def code_format(args="."):
+def code_format(only_check: bool, args="."):
     """Run black code formatter."""
     line_length = config["tool"]["black"].get("line-length", 80)
     exclude = config["tool"]["black"].get("exclude", "")
-    run_command(f"python3 -m black --line-length {line_length} --exclude '{exclude}'  {args}")
+    check_string = "--check" if only_check else ""
+    run_command(f"python3 -m black --line-length {line_length} --exclude '{exclude}' {check_string} {args}")
     print(args)
 
 
-def flake_lint(args="."):
+def flake_lint(_, args="."):
     """Run flake8 linter."""
     exclude = ",".join(config["tool"]["flake8"].get("exclude", []))
     extend_ignore = ",".join(config["tool"]["flake8"].get("extend-ignore", []))
@@ -34,20 +35,21 @@ def flake_lint(args="."):
     )
 
 
-def isort(args="."):
+def isort(only_check: bool, args="."):
     """Run isort for import sorting."""
     profile = config["tool"]["isort"].get("profile", "black")
     skip_glob = ",".join(config["tool"]["isort"].get("skip_glob", []))
-    run_command(f"python3 -m isort {args} --profile {profile} --skip-glob '{skip_glob}'")
+    check_string = "--check-only" if only_check else ""
+    run_command(f"python3 -m isort {args} --profile {profile} --skip-glob '{skip_glob}' {check_string}")
 
 
-def vulture(args="."):
+def vulture(_, args="."):
     """Run vulture."""
     exclude = ",".join(config["tool"]["vulture"].get("exclude", []))
     run_command(f"python3 -m vulture {args} --exclude '{exclude}'")
 
 
-def type_check(args="."):
+def type_check(_, args="."):
     """Run mypy for type checking."""
     python_version = config["tool"]["mypy"].get("python_version", "3.8")
     overrides = " ".join(
@@ -56,11 +58,11 @@ def type_check(args="."):
     run_command(f"python3 -m mypy {args}/*.py --python-version {python_version} {overrides}")
 
 
-def lint(args="."):
+def lint(only_check: bool, args="."):
     """Run all linting tools: isort, black, flake8."""
-    isort(args)
-    code_format(args)
-    flake_lint(args)
+    isort(only_check, args)
+    code_format(only_check, args)
+    flake_lint(only_check, args)
 
 
 def clean():
@@ -86,8 +88,13 @@ def main():
 
     task = sys.argv[1]
     args = sys.argv[2:] if len(sys.argv) > 2 else ["."]
+
+    only_check = "--check" in args
+    if only_check:
+        args.remove("--check")
+
     if task in tasks:
-        tasks[task](*args)
+        tasks[task](only_check, *args)
     else:
         print(f"Unknown task: {task}")
         sys.exit(1)
